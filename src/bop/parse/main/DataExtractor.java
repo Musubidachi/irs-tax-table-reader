@@ -1,4 +1,4 @@
-package bop.parse.test;
+package bop.parse.main;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,62 +6,39 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-public class Test {
+//Short version
+public class DataExtractor {
 
 	public static void main(String[] args) {
 		// TODO Check if I can read the pdf through the url
 		// https://www.irs.gov/pub/irs-pdf/i1040tt.pdf
-
+		
 		try {
 			getDataFromURL();
-			parseData();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public static void getDataFromURL() throws Exception {
+	public static ArrayList<String> getDataFromURL() throws Exception {
 		// since we know the url path; no need in asking for it.
 		URL path = new URL("https://www.irs.gov/pub/irs-pdf/i1040tt.pdf");
 		URLConnection connect = path.openConnection();
 		// let's check to see that the connection is established
 		InputStream input = connect.getInputStream();
-		Files.copy(input, Paths.get("temp.pdf"), StandardCopyOption.REPLACE_EXISTING);
-		// System.out.println(data);
-		input.close();
-		System.out.println("Should be done.");
-	}
-
-	public static ArrayList<String> parseData() throws Exception {
-
-		// TODO: Take data from File extract it from the file using pdfbox
-		String data = getText(new File("temp.pdf"));
-		// System.out.println(data);
-
-		// TODO: Delete the local version of the file
-		deleteTheFile(new File("temp.pdf"));
-
-		// TODO: Write out the data to another file
-		writeFile(data);
-
 		// TODO: Parse data using pdfbox
-		ArrayList<String> datalist = sortData();
-
+		ArrayList<String> datalist = sortData(writeFile(getText(input)));
+		input.close();
 		return datalist;
 	}
 
-	private static ArrayList<String> sortData() throws Exception {
-
-		File f = new File("temp.data");
+	private static ArrayList<String> sortData(File f) throws Exception {
 		Scanner sc = new Scanner(f);
 		String capture = "";
 
@@ -93,13 +70,15 @@ public class Test {
 		return datalist;
 	}
 
-	private static void writeFile(String data) throws Exception {
-		PrintWriter out = new PrintWriter("temp.data");
+	private static File writeFile(String data) throws Exception {
+		File f = new File("temp.data");
+		PrintWriter out = new PrintWriter(f);
 		out.println(data);
 		out.close();
+		return f;
 	}
 
-	public static String getText(File pdfFile) throws IOException {
+	public static String getText(InputStream pdfFile) throws IOException {
 		PDDocument doc = PDDocument.load(pdfFile);
 		return new PDFTextStripper().getText(doc);
 	}
@@ -110,4 +89,5 @@ public class Test {
 		System.out.println("Deleting done.");
 
 	}
+
 }
