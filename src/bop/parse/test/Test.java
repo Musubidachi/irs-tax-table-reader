@@ -88,6 +88,7 @@ public class Test {
 			}
 		}
 		sc.close();
+		deleteTheFile(f);
 		System.out.println("Going out of data");
 		return datalist;
 	}
