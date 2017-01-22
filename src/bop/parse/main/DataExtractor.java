@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -20,12 +21,49 @@ public class DataExtractor {
 		// https://www.irs.gov/pub/irs-pdf/i1040tt.pdf
 		
 		try {
-			getDataFromURL();
+			ArrayList<String> data = getDataFromURL();
+			ArrayList<String[]> taxtable = new ArrayList<>();
+			for(String set : data){
+				taxtable.add(set.split(" "));
+				
+				for(int i = 0 ; i <taxtable.get(taxtable.size()-1).length; i++){
+					if(taxtable.get(taxtable.size()-1)[i].contains(",")){
+						String[] splitOnComma = taxtable.get(taxtable.size()-1)[i].split(",");
+						taxtable.get(taxtable.size()-1)[i] = splitOnComma[0] + splitOnComma[1];
+					}
+				}
+			}
+			findUsersTax(taxtable);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
+	public static void findUsersTax(ArrayList<String []> taxtable) throws Exception{
+		Scanner s = new Scanner(System.in);
+		System.out.println("Enter your Adjusted Gross income :");
+		double agi = s.nextDouble();
+		if(agi >= 100000){
+			s.close();
+			System.out.println("Please calculate your income based on the formulas.");
+			return;
+		}
+		System.out.println("Single  (1) Married Filing Joint (2) Married Filing Seperately (3) Head of House (4)");
+		int howTheyFile = s.nextInt();
+		s.close();
+		for(String[]arr : taxtable){
+			//for each tax set in the tax table
+			if(arr.length == 1){
+				//beginning of the table
+			}else if((Double.parseDouble(arr[0]) <= agi && Double.parseDouble(arr[1])> agi) || 
+					Double.parseDouble(arr[0]) < agi && Double.parseDouble(arr[1]) >= agi ){
+				System.out.println("Table low bound " + arr[0] + " Table high bound " + arr[1]);
+				System.out.print("Your tax amount is : "+ arr[howTheyFile+1]); 
+				break;
+			}
+		}
+	}
+	
 	public static ArrayList<String> getDataFromURL() throws Exception {
 		// since we know the url path; no need in asking for it.
 		URL path = new URL("https://www.irs.gov/pub/irs-pdf/i1040tt.pdf");
@@ -55,7 +93,7 @@ public class DataExtractor {
 							// System.out.println(capture);
 							if (capture.contains(",") || (capture.contains(" ") && !capture.contains("If line 43"))) {
 								datalist.add(capture);
-								System.out.println(capture);
+								//System.out.println(capture);
 							} else {
 								break;
 							}
