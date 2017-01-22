@@ -1,7 +1,7 @@
 temp.data
 temp.pdf
 /bin
-*.classpath
-*.project
+.classpath
+.project
 *.settings
 *.class
